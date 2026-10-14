@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>LPFS Vergelijkbaar Leren</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700;800&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-size: 14px; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+
+/* Layout: één kolom met werkbladen; samenvatting boven, algoritmes in het midden, geleerde verbanden en voorkeuren daaronder. */
+:root {
+  --bg: #fcfcfb;
+  --vlak: #ffffff;
+  --vlak-zacht: #f4f3f0;
+  --lijn: #e4e2dc;
+  --ink: #17171a;
+  --ink-2: #52514e;
+  --ink-3: #7d7b75;
+  --accent: #c01c1a;
+  --accent-zacht: #fbeceb;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+  --div-pos: #2a78d6; --div-neg: #e34948; --div-mid: #f0efec;
+  --goed: #0ca30c;
+  --font-kop: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-tekst: "Figtree", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1a19; --vlak: #222220; --vlak-zacht: #2a2a28; --lijn: #383835;
+    --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #96958c;
+    --accent: #ef5a57; --accent-zacht: #3a2221;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --div-pos: #3987e5; --div-neg: #e66767; --div-mid: #383835;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1a1a19; --vlak: #222220; --vlak-zacht: #2a2a28; --lijn: #383835;
+  --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #96958c;
+  --accent: #ef5a57; --accent-zacht: #3a2221;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  --div-pos: #3987e5; --div-neg: #e66767; --div-mid: #383835;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-tekst); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.pagina { max-width: 1180px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--font-kop); margin: 0; text-wrap: balance; color: var(--ink); }
+h1 { font-size: clamp(26px, 4vw, 34px); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+h2 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+h3 { font-size: 15px; font-weight: 700; }
+p { margin: 0; }
+.label { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.data, .num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.zacht { color: var(--ink-2); }
+.klein { font-size: 13px; }
+
+/* ---- kop ---- */
+.kop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px 24px; padding-bottom: 20px; border-bottom: 1px solid var(--lijn); }
+.kop .ondertitel { margin-top: 8px; max-width: 62ch; color: var(--ink-2); }
+.status { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; }
+.status-regel { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.stip { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: 0 0 auto; }
+.stip[data-staat="live"] { background: var(--goed); box-shadow: 0 0 0 4px color-mix(in srgb, var(--goed) 18%, transparent); }
+
+/* ---- kerncijfers ---- */
+.kern { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--lijn); border: 1px solid var(--lijn); border-radius: var(--r); overflow: hidden; }
+.kern > div { background: var(--vlak); padding: 18px 20px; display: grid; gap: 4px; min-width: 0; }
+.kern .waarde { font-family: var(--font-kop); font-size: 30px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.kern .toelichting { font-size: 12.5px; color: var(--ink-3); }
+
+/* ---- secties ---- */
+.sectie { display: grid; gap: 14px; }
+.sectie-kop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px; }
+.sectie-kop p { max-width: 70ch; }
+.werkblad { background: var(--vlak); border: 1px solid var(--lijn); border-radius: var(--r); padding: 18px 20px; min-width: 0; }
+.twee { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.model-kenmerken { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px 24px; align-items: start; }
+.drie { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+
+/* ---- algoritmes ---- */
+.armen { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 14px; }
+.verbanden { min-width: 420px; }
+.armen th { text-align: left; font-weight: 600; font-size: 12px; color: var(--ink-3); padding: 0 10px 10px; white-space: nowrap; }
+.armen td { padding: 12px 10px; border-top: 1px solid var(--lijn); vertical-align: middle; }
+.armen td.r, .armen th.r { text-align: right; }
+.arm-naam { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.arm-naam small { display: block; font-weight: 400; font-size: 12px; color: var(--ink-3); }
+.kleur { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+.balk-kans { position: relative; height: 8px; border-radius: 4px; background: var(--vlak-zacht); min-width: 90px; }
+.balk-kans span { position: absolute; inset: 0 auto 0 0; border-radius: 4px; }
+.kans-cel { display: grid; grid-template-columns: minmax(80px, 1fr) 46px; align-items: center; gap: 10px; }
+.winnaar { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
+.tabel-schuif { overflow-x: auto; }
+select { font: inherit; font-size: 13px; color: var(--ink); background: var(--vlak); border: 1px solid var(--lijn); border-radius: 8px; padding: 6px 10px; }
+select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- grafiek ---- */
+.grafiek { width: 100%; height: auto; display: block; overflow: visible; }
+.grafiek text { fill: var(--ink-3); font-family: var(--font-data); font-size: 11px; }
+.grafiek .raster { stroke: var(--lijn); stroke-width: 1; }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---- verbanden ---- */
+.verbanden { width: 100%; border-collapse: collapse; font-size: 14px; }
+.verbanden th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-3); padding: 0 8px 8px; white-space: nowrap; }
+.verbanden td { padding: 9px 8px; border-top: 1px solid var(--lijn); }
+.verbanden td.r, .verbanden th.r { text-align: right; }
+.pijl { color: var(--ink-3); padding: 0 4px; }
+.scorebalk { display: grid; grid-template-columns: minmax(60px, 1fr) 44px; align-items: center; gap: 8px; }
+.scorebalk i { display: block; height: 6px; border-radius: 3px; background: var(--accent); }
+
+/* ---- voorkeuren ---- */
+.kenmerk { display: grid; gap: 8px; }
+.kenmerk + .kenmerk { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--lijn); }
+.model-kenmerken .kenmerk + .kenmerk { margin-top: 0; padding-top: 0; border-top: 0; }
+.lift-rij { display: grid; grid-template-columns: 72px minmax(0, 1fr) 52px; align-items: center; gap: 10px; font-size: 13px; }
+.lift-rij .w { color: var(--ink-2); font-family: var(--font-data); font-size: 12px; }
+.lift-baan { position: relative; height: 14px; }
+.lift-baan::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--ink-3); opacity: .5; }
+.lift-baan span { position: absolute; top: 2px; height: 10px; border-radius: 3px; }
+.lift-rij .getal { text-align: right; font-family: var(--font-data); font-size: 12px; }
+.lift-rij[data-weinig="1"] { opacity: .45; }
+
+/* ---- kleine tabellen ---- */
+.mini { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.mini th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-3); padding: 0 6px 6px; }
+.mini td { padding: 7px 6px; border-top: 1px solid var(--lijn); }
+.mini .r { text-align: right; }
+
+.uitleg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.uitleg div { display: grid; gap: 6px; align-content: start; }
+.uitleg p { font-size: 13.5px; color: var(--ink-2); }
+
+.leeg { display: grid; gap: 10px; justify-items: start; padding: 28px; border: 1px dashed var(--lijn); border-radius: var(--r); background: var(--vlak); }
+.leeg p { max-width: 64ch; color: var(--ink-2); }
+.voet { font-size: 12.5px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+
+#tip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.45; padding: 8px 10px; border-radius: 8px; max-width: 260px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+#tip b { font-weight: 600; }
+
+@media (max-width: 860px) {
+  .kern { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .twee, .drie, .uitleg { grid-template-columns: minmax(0, 1fr); }
+  .status { align-items: flex-start; text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="pagina">
+  <header class="kop">
+    <div>
+      <div class="label">LPFS · VWO-experiment · leasevoorraad</div>
+      <h1 style="margin-top:6px">Vergelijkbare auto's, zelflerend</h1>
+      <p class="ondertitel">Vijf algoritmes kiezen welke auto's er naast de bekeken auto staan. Het systeem leert van kliks, offerteaanvragen en sessies, en geeft het best werkende algoritme steeds meer verkeer.</p>
+    </div>
+    <div class="status">
+      <span class="status-regel"><span class="stip" id="stip"></span><span id="status-tekst">Verbinden met de gegevens…</span></span>
+      <span class="status-regel klein" id="status-tijd"></span>
+    </div>
+  </header>
+
+  <main id="inhoud" class="pagina" style="gap:28px">
+    <div class="leeg" id="laden">
+      <h2>Gegevens laden</h2>
+      <p>Het dashboard haalt de actuele stand op uit de database van het experiment en ververst elke minuut.</p>
+    </div>
+  </main>
+
+  <footer class="voet">
+    <span>Bron: Supabase-project CRO, functie rec_dashboard. Laatste 30 dagen.</span>
+    <span>Live: dit dashboard ververst elke minuut. De statistieken worden elke 15 minuten herberekend, het lerende model traint elk uur.</span>
+    <span>VWO blijft leidend voor de uitslag van de A/B-test.</span>
+  </footer>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var ARMEN = [
+    { id: 'regels',  naam: 'Regels',  uitleg: 'Vaste regels: prijs, bouwjaar, brandstof, vermogen', kleur: 'var(--s1)' },
+    { id: 'cokliks', naam: 'Co-kliks', uitleg: 'Modellen die bezoekers van dit model aanklikken', kleur: 'var(--s2)' },
+    { id: 'sessie',  naam: 'Sessie',  uitleg: 'Afgestemd op wat de bezoeker eerder bekeek', kleur: 'var(--s3)' },
+    { id: 'hybride', naam: 'Hybride', uitleg: 'Regels × geleerde voorkeuren × verbanden', kleur: 'var(--s4)' },
+    { id: 'lerend',  naam: 'Lerend model', uitleg: 'Voorspelt de klikkans per auto uit alle kenmerken tegelijk', kleur: 'var(--s5)' }
+  ];
+
+  var KENMERKEN = {
+    pr: { naam: 'Maandbedrag t.o.v. bekeken auto', fmt: function (b) { var v = Math.round(parseFloat(b) * 100); return (v > 0 ? '+' : '') + v + '%'; }, volgorde: true },
+    yd: { naam: 'Bouwjaar t.o.v. bekeken auto', fmt: function (b) { var v = parseInt(b, 10); return (v > 0 ? '+' : '') + v + ' jr'; }, volgorde: true },
+    km: { naam: 'Kilometerstand t.o.v. bekeken auto', fmt: function (b) { var v = parseInt(b, 10) * 20; return (v > 0 ? '+' : '') + v + 'k km'; }, volgorde: true },
+    pk: { naam: 'Vermogen t.o.v. bekeken auto', fmt: function (b) { var v = Math.round(parseFloat(b) * 100); return (v > 0 ? '+' : '') + v + '%'; }, volgorde: true },
+    sm: { naam: 'Zelfde model', fmt: janee },
+    sb: { naam: 'Zelfde merk', fmt: janee },
+    sf: { naam: 'Zelfde brandstof', fmt: janee },
+    sc: { naam: 'Zelfde carrosserie', fmt: janee },
+    st: { naam: 'Zelfde transmissie', fmt: janee }
+  };
+  var KENMERK_VOLGORDE = ['pr', 'yd', 'km', 'pk', 'sm', 'sb', 'sf', 'sc', 'st'];
+
+  var staat = { data: null, segment: 'alle' };
+  var inhoud = document.getElementById('inhoud');
+
+  start();
+
+  var herTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(herTimer);
+    herTimer = setTimeout(function () { if (staat.data && !staat.data.fout) { tekenDagGrafiek(staat.data); } }, 150);
+  });
+
+  /* function-declaraties: start() draait al voordat var-regels hieronder uitgevoerd zijn */
+  function supa() { return 'https://qwrcsfcdtqqjgrbamabr.supabase.co'; }
+  function sleutel() { return 'sb_publishable_OdNe3zFkNCBztJ-oacDCVw_lb3w-9jb'; } /* publieke sleutel: kan alleen rec_log, rec_config en rec_dashboard aanroepen */
+  function token() { return String(location.hash || '').replace(/^#/, '').trim(); }
+  var bezig = false;
+
+  /* De toegangscode staat achter de # in de link. Dat deel stuurt de browser
+     nooit naar een server mee, en het staat niet in deze broncode. Zonder
+     code geeft de database alleen "geen toegang" terug. */
+  function start() {
+    if (!/^[0-9a-f]{32}$/.test(token())) {
+      toonFout('Deze link mist de toegangscode. Gebruik de volledige link die je van daar-om.nl hebt gekregen.');
+      return;
+    }
+    haal();
+    setInterval(haal, 60000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) { haal(); } });
+  }
+
+  function haal() {
+    if (bezig || document.hidden) { return; }
+    bezig = true;
+    fetch(supa() + '/rest/v1/rpc/rec_dashboard', {
+      method: 'POST',
+      cache: 'no-store',
+      headers: { 'apikey': sleutel(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_token: token() })
+    }).then(function (r) {
+      if (!r.ok) { throw new Error('status ' + r.status); }
+      return r.json();
+    }).then(function (d) {
+      bezig = false;
+      staat.data = d;
+      staat.opgehaald = new Date().toISOString();
+      var y = window.scrollY;
+      render();
+      window.scrollTo(0, y);
+    }).catch(function () {
+      bezig = false;
+      if (!staat.data) { toonFout('De gegevens konden niet geladen worden. Probeer het over een minuut opnieuw.'); }
+      else { zetStatus('Verbinding even weg, nieuwe poging over een minuut', false, document.getElementById('status-tijd').textContent); }
+    });
+  }
+
+  function zetStatus(tekst, live, tijd) {
+    document.getElementById('status-tekst').textContent = tekst;
+    document.getElementById('stip').setAttribute('data-staat', live ? 'live' : 'uit');
+    document.getElementById('status-tijd').textContent = tijd || '';
+  }
+
+  function toonFout(t) {
+    zetStatus('Geen verbinding', false);
+    inhoud.innerHTML = '<div class="leeg"><h2>Geen gegevens</h2><p></p></div>';
+    inhoud.querySelector('p').textContent = t;
+  }
+
+  function toonLeeg() {
+    zetStatus('Wacht op eerste gegevens', false);
+    inhoud.innerHTML = '<div class="leeg"><h2>Nog geen gegevens</h2><p>Zodra de VWO-variatie en de sessielogger live staan en bezoekers toestemming geven voor statistieken, verschijnen hier de eerste cijfers. Het dashboard ververst elke minuut.</p></div>';
+  }
+
+  /* ================================================================ */
+
+  function render() {
+    var d = staat.data;
+    if (!d || d.fout) { toonFout(d && d.fout ? 'Het dashboard kreeg geen toegang tot de database (' + d.fout + ').' : 'Leeg antwoord van de database.'); return; }
+    var t = d.totaal || {};
+    var heeftData = (t.autopaginas || 0) + (t.vertoningen || 0) > 0;
+    zetStatus(heeftData ? 'Systeem leert' : 'Wacht op eerste bezoekers', heeftData,
+      'Bijgewerkt ' + tijdTekst(d.bijgewerkt) + (d.geleerd_op ? ' · laatste leerronde ' + tijdTekst(d.geleerd_op) : ''));
+
+    var html = '';
+    html += kernHTML(t, d);
+    html += armenHTML(d);
+    html += dagHTML(d);
+    html += '<div class="twee">' + verbandenHTML(d) + voorkeurenHTML(d) + '</div>';
+    html += modelHTML(d);
+    html += gedragHTML(d);
+    html += bronnenHTML(d);
+    html += uitlegHTML();
+    inhoud.innerHTML = html;
+
+    var sel = document.getElementById('segment');
+    if (sel) {
+      sel.value = staat.segment;
+      sel.addEventListener('change', function () { staat.segment = sel.value; render(); });
+    }
+    tekenDagGrafiek(d);
+    koppelTips();
+  }
+
+  /* ---------- kerncijfers ---------- */
+  function kernHTML(t, d) {
+    var ctr = t.vertoningen ? t.kliks / t.vertoningen : null;
+    var groepen = d.groepen || [];
+    var leadSessies = groepen.reduce(function (s, g) { return s + (g.sessies_met_lead || 0); }, 0);
+    return '<section class="kern" aria-label="Kerncijfers laatste 30 dagen">' +
+      cel('Sessies gelogd', getal(t.sessies), getal(t.autopaginas) + ' autopagina\'s bekeken') +
+      cel('Blok getoond', getal(t.vertoningen), getal(t.kliks) + ' kliks op een auto in het blok') +
+      cel('Klikratio blok', ctr == null ? '–' : pct(ctr, 1), 'kliks per vertoning') +
+      cel('Offerte-kliks', getal(t.leads), getal(leadSessies) + ' sessies met een offerteklik') +
+      '</section>';
+    function cel(l, w, x) { return '<div><span class="label">' + l + '</span><span class="waarde">' + w + '</span><span class="toelichting">' + x + '</span></div>'; }
+  }
+
+  /* ---------- algoritmes ---------- */
+  function armenHTML(d) {
+    var rijen = d.algoritmes || [];
+    var segs = {};
+    rijen.forEach(function (r) { segs[r.segment] = 1; });
+    var segLijst = Object.keys(segs).sort(function (a, b) { return a === 'alle' ? -1 : b === 'alle' ? 1 : a.localeCompare(b); });
+    if (segLijst.indexOf(staat.segment) === -1) { staat.segment = 'alle'; }
+
+    var inSeg = ARMEN.map(function (a) {
+      var r = rijen.filter(function (x) { return x.algoritme === a.id && x.segment === staat.segment; })[0] || { vertoningen: 0, kliks: 0, leads: 0 };
+      return { arm: a, i: r.vertoningen || 0, c: r.kliks || 0, l: r.leads || 0 };
+    });
+    var totaalI = inSeg.reduce(function (s, x) { return s + x.i; }, 0);
+    var kansen = kansBeste(inSeg);
+    var beste = -1, max = -1;
+    kansen.forEach(function (k, i) { if (inSeg[i].i > 0 && k > max) { max = k; beste = i; } });
+
+    var opties = segLijst.map(function (s) { return '<option value="' + esc(s) + '">' + esc(segmentNaam(s)) + '</option>'; }).join('');
+
+    var body = inSeg.map(function (x, i) {
+      var ctr = x.i ? x.c / x.i : null;
+      return '<tr>' +
+        '<td><div class="arm-naam"><span class="kleur" style="background:' + x.arm.kleur + '"></span><div>' + x.arm.naam +
+          (i === beste && totaalI >= 200 ? '<span class="winnaar">voorlopig beste</span>' : '') +
+          '<small>' + x.arm.uitleg + '</small></div></div></td>' +
+        '<td class="r num">' + getal(x.i) + '</td>' +
+        '<td class="r num">' + (totaalI ? pct(x.i / totaalI, 0) : '–') + '</td>' +
+        '<td class="r num">' + getal(x.c) + '</td>' +
+        '<td class="r num">' + (ctr == null ? '–' : pct(ctr, 1)) + '</td>' +
+        '<td class="r num">' + getal(x.l) + '</td>' +
+        '<td><div class="kans-cel" data-tip="<b>' + x.arm.naam + '</b><br>Kans dat dit algoritme het hoogste klik- en leadratio heeft, gegeven de data tot nu toe."><div class="balk-kans"><span style="width:' + Math.round(kansen[i] * 100) + '%;background:' + x.arm.kleur + '"></span></div><span class="num">' + pct(kansen[i], 0) + '</span></div></td>' +
+        '</tr>';
+    }).join('');
+
+    return '<section class="sectie">' +
+      '<div class="sectie-kop"><div><h2>Welk algoritme wint?</h2><p class="zacht klein">Een lead telt dubbel. "Kans op beste" is dezelfde berekening die bepaalt hoeveel verkeer elk algoritme krijgt.' + (totaalI < 400 ? ' Met minder dan 400 vertoningen is dit nog grillig.' : '') + '</p></div>' +
+      '<label class="klein zacht">Segment <select id="segment">' + opties + '</select></label></div>' +
+      '<div class="werkblad tabel-schuif"><table class="armen"><thead><tr><th>Algoritme</th><th class="r">Vertoningen</th><th class="r">Aandeel</th><th class="r">Kliks</th><th class="r">Klikratio</th><th class="r">Leads</th><th>Kans op beste</th></tr></thead><tbody>' + body + '</tbody></table></div>' +
+      '</section>';
+  }
+
+  /* Monte Carlo over Beta-verdelingen, zoals de bandit in de VWO-code */
+  function kansBeste(rijen) {
+    var N = 4000, win = rijen.map(function () { return 0; });
+    var actief = rijen.filter(function (r) { return r.i > 0; }).length;
+    if (!actief) { return rijen.map(function () { return 0; }); }
+    for (var n = 0; n < N; n++) {
+      var best = -1, bi = 0;
+      for (var i = 0; i < rijen.length; i++) {
+        var r = rijen[i];
+        if (!r.i) { continue; }
+        var s = Math.min(r.i, r.c + 2 * r.l);
+        var v = betaTrek(1 + s, 1 + r.i - s);
+        if (v > best) { best = v; bi = i; }
+      }
+      win[bi]++;
+    }
+    return win.map(function (w) { return w / N; });
+  }
+
+  /* ---------- per dag ---------- */
+  function dagHTML(d) {
+    var leg = ARMEN.map(function (a) { return '<span><span class="kleur" style="background:' + a.kleur + '"></span>' + a.naam + '</span>'; }).join('');
+    return '<section class="sectie"><div class="sectie-kop"><div><h2>Klikratio per dag</h2><p class="zacht klein">Kliks per vertoning van het blok, per algoritme. Dagen met minder dan 10 vertoningen voor een algoritme worden niet getekend.</p></div><div class="legenda">' + leg + '</div></div>' +
+      '<div class="werkblad"><div id="daggrafiek"></div></div></section>';
+  }
+
+  function tekenDagGrafiek(d) {
+    var box = document.getElementById('daggrafiek');
+    if (!box) { return; }
+    var rijen = d.per_dag_algoritme || [];
+    var dagen = [];
+    rijen.forEach(function (r) { if (dagen.indexOf(r.dag) === -1) { dagen.push(r.dag); } });
+    dagen.sort();
+    if (!dagen.length) { box.innerHTML = '<p class="zacht klein">Nog geen vertoningen.</p>'; return; }
+
+    /* Tekenen op de werkelijke breedte, zodat tekst op mobiel leesbaar blijft */
+    var W = Math.max(320, Math.round(box.clientWidth || 1000)), H = W < 600 ? 220 : 260, L = 42, R = 14, T = 12, B = 30;
+    var reeksen = ARMEN.map(function (a) {
+      return { arm: a, punten: dagen.map(function (dag, i) {
+        var r = rijen.filter(function (x) { return x.dag === dag && x.algoritme === a.id; })[0];
+        if (!r || r.vertoningen < 10) { return null; }
+        return { i: i, dag: dag, v: r.kliks / r.vertoningen, n: r.vertoningen, c: r.kliks };
+      }) };
+    });
+    var maxV = 0;
+    reeksen.forEach(function (s) { s.punten.forEach(function (p) { if (p && p.v > maxV) { maxV = p.v; } }); });
+    var stap = maxV > 0.4 ? 0.1 : maxV > 0.2 ? 0.05 : maxV > 0.08 ? 0.02 : 0.01;
+    var top = Math.max(stap * 2, Math.ceil(maxV / stap) * stap);
+    function x(i) { return dagen.length === 1 ? L + (W - L - R) / 2 : L + i * (W - L - R) / (dagen.length - 1); }
+    function y(v) { return T + (H - T - B) * (1 - v / top); }
+
+    var s = '<svg class="grafiek" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Klikratio per dag per algoritme">';
+    for (var g = 0; g <= top + 1e-9; g += stap) {
+      s += '<line class="raster" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g) + '" y2="' + y(g) + '"/>';
+      s += '<text x="' + (L - 8) + '" y="' + (y(g) + 4) + '" text-anchor="end">' + Math.round(g * 100) + '%</text>';
+    }
+    var elke = Math.max(1, Math.ceil(dagen.length / (W < 600 ? 4 : 8)));
+    dagen.forEach(function (dag, i) {
+      if (i % elke === 0 || i === dagen.length - 1) { s += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + datumKort(dag) + '</text>'; }
+    });
+    reeksen.forEach(function (r) {
+      var pad = '', open = false;
+      r.punten.forEach(function (p) {
+        if (!p) { open = false; return; }
+        pad += (open ? 'L' : 'M') + x(p.i).toFixed(1) + ' ' + y(p.v).toFixed(1) + ' ';
+        open = true;
+      });
+      if (pad) { s += '<path d="' + pad + '" fill="none" stroke="' + r.arm.kleur + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'; }
+      r.punten.forEach(function (p, idx) {
+        if (!p) { return; }
+        var alleen = !r.punten[idx - 1] && !r.punten[idx + 1];
+        var laatste = idx === r.punten.length - 1 || !r.punten.slice(idx + 1).some(Boolean);
+        if (alleen || laatste) {
+          s += '<circle cx="' + x(p.i) + '" cy="' + y(p.v) + '" r="4.5" fill="' + r.arm.kleur + '" stroke="var(--vlak)" stroke-width="2"/>';
+        }
+      });
+    });
+    /* hover-kolommen per dag */
+    dagen.forEach(function (dag, i) {
+      var tip = '<b>' + datumLang(dag) + '</b>';
+      reeksen.forEach(function (r) {
+        var p = r.punten[i];
+        tip += '<br>' + r.arm.naam + ': ' + (p ? pct(p.v, 1) + ' (' + p.c + '/' + p.n + ')' : 'te weinig data');
+      });
+      var bw = dagen.length === 1 ? (W - L - R) : (W - L - R) / (dagen.length - 1);
+      s += '<rect x="' + (x(i) - bw / 2) + '" y="' + T + '" width="' + bw + '" height="' + (H - T - B) + '" fill="transparent" data-tip="' + esc(tip) + '"/>';
+    });
+    s += '</svg>';
+    box.innerHTML = s;
+  }
+
+  /* ---------- verbanden ---------- */
+  function verbandenHTML(d) {
+    var v = (d.verbanden || []).slice(0, 25);
+    var inhoudV;
+    if (!v.length) {
+      inhoudV = '<p class="zacht klein">Nog geen verbanden. Die ontstaan zodra bezoekers in het blok klikken of meerdere auto\'s in één sessie bekijken.</p>';
+    } else {
+      var max = v[0].score || 1;
+      inhoudV = '<div class="tabel-schuif"><table class="verbanden"><thead><tr><th>Bekeken</th><th>Daarna gekozen</th><th class="r">Kliks</th><th class="r">Sessies</th><th>Sterkte</th></tr></thead><tbody>' +
+        v.map(function (r) {
+          return '<tr><td>' + esc(modelNaam(r.van)) + '</td><td>' + esc(modelNaam(r.naar)) + '</td><td class="r num">' + getal(r.kliks) + '</td><td class="r num">' + getal(r.overstappen) + '</td>' +
+            '<td><div class="scorebalk" data-tip="Sterkte ' + r.score + '. Kliks in het blok tellen vol, overstappen in de sessie half; populaire modellen worden licht afgeremd."><i style="width:' + Math.max(4, Math.round(100 * r.score / max)) + '%"></i><span class="num klein">' + fx(r.score) + '</span></div></td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    return '<section class="sectie"><div class="sectie-kop"><div><h2>Geleerde verbanden</h2><p class="zacht klein">Wie het ene model bekijkt, kiest daarna vaak het andere. Dit voedt het co-klik- en het hybride algoritme.</p></div></div><div class="werkblad">' + inhoudV + '</div></section>';
+  }
+
+  /* ---------- voorkeuren ---------- */
+  function voorkeurenHTML(d) {
+    var rijen = d.voorkeuren || [];
+    var per = {};
+    rijen.forEach(function (r) { (per[r.kenmerk] = per[r.kenmerk] || []).push(r); });
+    var blokken = KENMERK_VOLGORDE.filter(function (k) { return per[k] && KENMERKEN[k]; }).map(function (k) {
+      var lijst = per[k].slice().sort(function (a, b) { return parseFloat(a.waarde) - parseFloat(b.waarde); });
+      return '<div class="kenmerk"><h3>' + KENMERKEN[k].naam + '</h3>' + lijst.map(function (r) {
+        var lift = r.lift || 1;
+        var afw = Math.max(-1, Math.min(1, Math.log(lift) / Math.log(2)));  /* log2: 0,5x … 2x */
+        var breedte = Math.abs(afw) * 50;
+        var stijl = afw >= 0 ? 'left:50%;width:' + breedte + '%;background:var(--div-pos)' : 'right:50%;width:' + breedte + '%;background:var(--div-neg)';
+        var weinig = r.vertoningen < 30 ? 1 : 0;
+        return '<div class="lift-rij" data-weinig="' + weinig + '" data-tip="<b>' + esc(KENMERKEN[k].naam) + ': ' + esc(KENMERKEN[k].fmt(r.waarde)) + '</b><br>' + r.kliks + ' kliks op ' + r.vertoningen + ' vertoningen.<br>' + (lift >= 1 ? 'Vaker' : 'Minder vaak') + ' gekozen dan verwacht op basis van de positie.' + (weinig ? '<br>Nog te weinig data, telt nog niet mee.' : '') + '">' +
+          '<span class="w">' + esc(KENMERKEN[k].fmt(r.waarde)) + '</span><div class="lift-baan"><span style="' + stijl + '"></span></div><span class="getal">' + fx(lift) + '×</span></div>';
+      }).join('') + '</div>';
+    }).join('');
+    if (!blokken) { blokken = '<p class="zacht klein">Nog geen voorkeuren. Na ongeveer 30 vertoningen per waarde begint het systeem ze mee te wegen.</p>'; }
+    return '<section class="sectie"><div class="sectie-kop"><div><h2>Geleerde voorkeuren</h2><p class="zacht klein">1,00× is precies wat je op basis van de positie verwacht. Blauw wordt vaker gekozen, rood minder vaak.</p></div></div><div class="werkblad">' + blokken + '</div></section>';
+  }
+
+  /* ---------- lerend model ---------- */
+  function modelHTML(d) {
+    var m = d.model || {};
+    var meta = m.meta || null;
+    var gw = (m.gewichten || []).filter(function (r) { return r.kenmerk !== 'pos'; });
+    var pos = (m.gewichten || []).filter(function (r) { return r.kenmerk === 'pos'; });
+    var kop = '<div class="sectie-kop"><div><h2>Lerend model</h2><p class="zacht klein">Een voorspelmodel dat elk uur opnieuw traint op alle vertoningen en kliks. Het kijkt naar alle kenmerken tegelijk, dus het telt niets dubbel. Getallen zijn de factor op de klikkans: 1,30× is 30% meer kans, met het effect van de plek in de lijst eruit gerekend.</p></div></div>';
+    if (!meta || !meta.n) {
+      return '<section class="sectie">' + kop + '<div class="werkblad"><p class="zacht klein">Het model heeft nog niets om op te trainen. Vanaf ongeveer 400 vertoonde auto\'s doet het mee als vijfde algoritme.</p></div></section>';
+    }
+    var kern = '<div class="werkblad"><table class="mini"><tbody>' +
+      '<tr><td>Getraind op</td><td class="r num">' + getal(meta.n) + ' vertoonde auto\'s</td></tr>' +
+      '<tr><td>Waarvan aangeklikt</td><td class="r num">' + getal(meta.kliks) + '</td></tr>' +
+      '<tr><td>Kenmerken in het model</td><td class="r num">' + getal(meta.kenmerken) + '</td></tr>' +
+      '<tr><td>Voorspelt beter dan gemiddelde</td><td class="r num">' + (meta.verbetering != null ? pct(Math.max(0, meta.verbetering), 1) : '–') + '</td></tr>' +
+      '<tr><td>Laatste training</td><td class="r num">' + esc(tijdTekst(meta.t)) + '</td></tr>' +
+      '</tbody></table><p class="zacht klein" style="margin-top:10px">"Beter dan gemiddelde" is de daling in voorspelfout (log loss) tegenover een model dat elke auto dezelfde klikkans geeft. Bij klikdata is 3 tot 10% al een duidelijk signaal.</p></div>';
+
+    var per = {};
+    gw.forEach(function (r) { (per[r.kenmerk] = per[r.kenmerk] || []).push(r); });
+    var blokken = KENMERK_VOLGORDE.filter(function (k) { return per[k] && KENMERKEN[k]; }).map(function (k) {
+      var lijst = per[k].slice().sort(function (a, b) { return parseFloat(a.waarde) - parseFloat(b.waarde); });
+      return '<div class="kenmerk"><h3>' + KENMERKEN[k].naam + '</h3>' + lijst.map(function (r) {
+        var f = Math.exp(r.w || 0);
+        var afw = Math.max(-1, Math.min(1, (r.w || 0) / Math.log(2)));
+        var breedte = Math.abs(afw) * 50;
+        var stijl = afw >= 0 ? 'left:50%;width:' + breedte + '%;background:var(--div-pos)' : 'right:50%;width:' + breedte + '%;background:var(--div-neg)';
+        var zeker = Math.abs(r.w || 0) > 2 * (r.sd || 1);
+        return '<div class="lift-rij" data-weinig="' + (zeker ? 0 : 1) + '" data-tip="<b>' + esc(KENMERKEN[k].naam) + ': ' + esc(KENMERKEN[k].fmt(r.waarde)) + '</b><br>Factor ' + fx(f) + '× op de klikkans.<br>' + (zeker ? 'Statistisch duidelijk.' : 'Nog onzeker: het model varieert hier bewust om te leren.') + '">' +
+          '<span class="w">' + esc(KENMERKEN[k].fmt(r.waarde)) + '</span><div class="lift-baan"><span style="' + stijl + '"></span></div><span class="getal">' + fx(f) + '×</span></div>';
+      }).join('') + '</div>';
+    }).join('');
+    if (!blokken) { blokken = '<p class="zacht klein">Nog geen kenmerken geleerd.</p>'; }
+
+    var paren = m.paren || [];
+    var parenHTML = paren.length ? '<table class="mini"><thead><tr><th>Bekeken</th><th>Krijgt voorrang</th><th class="r">Factor</th></tr></thead><tbody>' +
+      paren.slice(0, 12).map(function (p) { return '<tr><td>' + esc(modelNaam(p.van)) + '</td><td>' + esc(modelNaam(p.naar)) + '</td><td class="r num">' + fx(Math.exp(p.w)) + '×</td></tr>'; }).join('') +
+      '</tbody></table>' : '<p class="zacht klein">Nog geen specifieke modelparen met genoeg bewijs.</p>';
+
+    var posHTML = pos.length ? '<p class="zacht klein" style="margin-top:10px">Plekeffect dat eruit gerekend wordt: ' + pos.sort(function (a, b) { return parseInt(a.waarde, 10) - parseInt(b.waarde, 10); }).map(function (p) { return 'plek ' + esc(p.waarde) + ' ' + fx(Math.exp(p.w)) + '×'; }).join(', ') + '.</p>' : '';
+
+    return '<section class="sectie">' + kop +
+      '<div class="twee">' + kern +
+      '<div class="werkblad"><h3 style="margin-bottom:12px">Sterkste modelparen</h3><div class="tabel-schuif">' + parenHTML + '</div>' + posHTML + '</div>' +
+      '</div><div class="werkblad" style="margin-top:16px"><h3 style="margin-bottom:12px">Wat het model belangrijk vindt</h3><div class="model-kenmerken">' + blokken + '</div></div></section>';
+  }
+
+  /* ---------- gedrag in het blok ---------- */
+  function gedragHTML(d) {
+    var pos = d.posities || [];
+    var maxCtr = pos.reduce(function (m, p) { return Math.max(m, p.vertoningen ? p.kliks / p.vertoningen : 0); }, 0) || 1;
+    var posHTML = pos.length ? pos.map(function (p) {
+      var c = p.vertoningen ? p.kliks / p.vertoningen : 0;
+      return '<div class="lift-rij" style="grid-template-columns:72px minmax(0,1fr) 52px" data-tip="Plek ' + p.positie + ': ' + p.kliks + ' kliks op ' + p.vertoningen + ' vertoningen"><span class="w">Plek ' + p.positie + '</span><div class="lift-baan" style="background:var(--vlak-zacht);border-radius:3px"><span style="left:0;top:0;height:14px;width:' + Math.round(100 * c / maxCtr) + '%;background:var(--s1)"></span></div><span class="getal">' + pct(c, 1) + '</span></div>';
+    }).join('') : '<p class="zacht klein">Nog geen data.</p>';
+
+    var pl = d.plekken || [];
+    var plTot = pl.reduce(function (s, x) { return s + x.kliks; }, 0);
+    var plNaam = { compact: 'Naast de calculator', full: 'Onder de tabs' };
+    var plHTML = pl.length ? '<table class="mini"><thead><tr><th>Plek van het blok</th><th class="r">Kliks</th><th class="r">Aandeel</th></tr></thead><tbody>' +
+      pl.map(function (x) { return '<tr><td>' + esc(plNaam[x.plek] || x.plek) + '</td><td class="r num">' + getal(x.kliks) + '</td><td class="r num">' + pct(x.kliks / plTot, 0) + '</td></tr>'; }).join('') + '</tbody></table>' : '<p class="zacht klein">Nog geen kliks.</p>';
+
+    var v = d.verkenning || {};
+    var vCtr = v.verken_vertoningen ? v.verken_kliks / v.verken_vertoningen : null;
+    var nCtr = v.normaal_vertoningen ? v.normaal_kliks / v.normaal_vertoningen : null;
+    var vHTML = '<table class="mini"><thead><tr><th>Soort kaart</th><th class="r">Getoond</th><th class="r">Klikratio</th></tr></thead><tbody>' +
+      '<tr><td>Gekozen door algoritme</td><td class="r num">' + getal(v.normaal_vertoningen) + '</td><td class="r num">' + (nCtr == null ? '–' : pct(nCtr, 1)) + '</td></tr>' +
+      '<tr><td>Verkenning (willekeurig)</td><td class="r num">' + getal(v.verken_vertoningen) + '</td><td class="r num">' + (vCtr == null ? '–' : pct(vCtr, 1)) + '</td></tr></tbody></table>' +
+      '<p class="zacht klein" style="margin-top:10px">Scoort verkenning bijna even goed, dan is er nog veel te leren. Ligt het algoritme ruim hoger, dan weet het systeem al goed wat werkt.</p>';
+
+    return '<section class="sectie"><div class="sectie-kop"><div><h2>Gedrag in het blok</h2><p class="zacht klein">Waar wordt geklikt, en hoe doet het algoritme het tegenover willekeurige verkenningskaarten?</p></div></div>' +
+      '<div class="drie"><div class="werkblad"><h3 style="margin-bottom:12px">Klikratio per plek in de lijst</h3><div style="display:grid;gap:10px">' + posHTML + '</div></div>' +
+      '<div class="werkblad"><h3 style="margin-bottom:12px">Compact of volledig blok</h3>' + plHTML + '</div>' +
+      '<div class="werkblad"><h3 style="margin-bottom:12px">Algoritme tegenover verkenning</h3>' + vHTML + '</div></div></section>';
+  }
+
+  /* ---------- bronnen en groepen ---------- */
+  function bronnenHTML(d) {
+    var br = d.bronnen || [];
+    var brHTML = br.length ? '<table class="mini"><thead><tr><th>Bron</th><th class="r">Sessies</th><th class="r">Kliks</th><th class="r">Offerte-kliks</th></tr></thead><tbody>' +
+      br.map(function (b) { return '<tr><td>' + esc(b.bron) + '</td><td class="r num">' + getal(b.sessies) + '</td><td class="r num">' + getal(b.kliks) + '</td><td class="r num">' + getal(b.leads) + '</td></tr>'; }).join('') + '</tbody></table>' : '<p class="zacht klein">Nog geen sessies.</p>';
+
+    var gr = d.groepen || [];
+    var grNaam = { variant: 'Variant (met blok)', controle: 'Controle (zonder blok)', buiten_test: 'Buiten de test', onbekend: 'Onbekend' };
+    var grHTML = gr.length ? '<table class="mini"><thead><tr><th>Groep</th><th class="r">Sessies</th><th class="r">Met offerteklik</th><th class="r">Ratio</th></tr></thead><tbody>' +
+      gr.map(function (g) { return '<tr><td>' + esc(grNaam[g.groep] || g.groep) + '</td><td class="r num">' + getal(g.sessies) + '</td><td class="r num">' + getal(g.sessies_met_lead) + '</td><td class="r num">' + (g.sessies ? pct(g.sessies_met_lead / g.sessies, 1) : '–') + '</td></tr>'; }).join('') + '</tbody></table>' +
+      '<p class="zacht klein" style="margin-top:10px">Indicatief: alleen bezoekers met toestemming voor statistieken. De officiële uitslag komt uit VWO.</p>' : '<p class="zacht klein">Nog geen sessies.</p>';
+
+    var ap = d.apparaten || [];
+    var apNaam = { m: 'Mobiel', d: 'Desktop' };
+    var apHTML = ap.filter(function (a) { return a.apparaat !== '?'; }).map(function (a) {
+      return '<tr><td>' + (apNaam[a.apparaat] || a.apparaat) + '</td><td class="r num">' + getal(a.vertoningen) + '</td><td class="r num">' + (a.vertoningen ? pct(a.kliks / a.vertoningen, 1) : '–') + '</td></tr>';
+    }).join('');
+    apHTML = apHTML ? '<table class="mini"><thead><tr><th>Apparaat</th><th class="r">Vertoningen</th><th class="r">Klikratio</th></tr></thead><tbody>' + apHTML + '</tbody></table>' : '<p class="zacht klein">Nog geen vertoningen.</p>';
+
+    return '<section class="sectie"><div class="sectie-kop"><div><h2>Bezoekers</h2><p class="zacht klein">Waar komen de sessies vandaan, en hoe verhouden variant en controle zich?</p></div></div>' +
+      '<div class="drie"><div class="werkblad"><h3 style="margin-bottom:12px">Variant tegenover controle</h3>' + grHTML + '</div>' +
+      '<div class="werkblad"><h3 style="margin-bottom:12px">Bronnen</h3><div class="tabel-schuif">' + brHTML + '</div></div>' +
+      '<div class="werkblad"><h3 style="margin-bottom:12px">Apparaten</h3>' + apHTML + '</div></div></section>';
+  }
+
+  function uitlegHTML() {
+    return '<section class="sectie"><h2>Hoe het systeem leert</h2><div class="uitleg werkblad">' +
+      '<div><span class="label">Meten</span><p>Elke vertoning, klik en offerteklik wordt anoniem vastgelegd, met de sessie eromheen: bron, apparaat, eerder bekeken auto\'s. Alleen bij toestemming voor statistieken.</p></div>' +
+      '<div><span class="label">Leren</span><p>Elke 15 minuten rekent de database opnieuw welke modellen bij elkaar horen en welke verschillen (prijs, bouwjaar, merk) tot een klik leiden. Elk uur traint daarnaast het lerende model. Recente data weegt zwaarder, dubbele vertoningen en bots tellen niet mee, en het effect van de plek in de lijst wordt eruit gerekend.</p></div>' +
+      '<div><span class="label">Kiezen</span><p>Per bezoek kiest de code een algoritme, met de kans dat het het beste is als gewicht. Kleine segmenten lenen kennis van het totaal. Zo krijgt de winnaar steeds meer verkeer en blijven de andere af en toe kansen krijgen.</p></div>' +
+      '</div></section>';
+  }
+
+  /* ---------- tooltip ---------- */
+  function koppelTips() {
+    var tip = document.getElementById('tip');
+    inhoud.addEventListener('mousemove', function (e) {
+      var el = e.target.closest ? e.target.closest('[data-tip]') : null;
+      if (!el) { tip.hidden = true; return; }
+      tip.innerHTML = el.getAttribute('data-tip');
+      tip.hidden = false;
+      var x = e.clientX + 14, y = e.clientY + 14;
+      var w = tip.offsetWidth, h = tip.offsetHeight;
+      if (x + w > window.innerWidth - 8) { x = e.clientX - w - 14; }
+      if (y + h > window.innerHeight - 8) { y = e.clientY - h - 14; }
+      tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    });
+    inhoud.addEventListener('mouseleave', function () { tip.hidden = true; });
+  }
+
+  /* ---------- hulpfuncties ---------- */
+  function fx(v) { return Number(v).toFixed(2).replace('.', ','); }
+  function janee(b) { return b === '1' ? 'ja' : 'nee'; }
+  function getal(n) { return (n == null ? 0 : n).toLocaleString('nl-NL'); }
+  function pct(v, dec) { return (v * 100).toLocaleString('nl-NL', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + '%'; }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function tijdTekst(iso) {
+    if (!iso) { return ''; }
+    var d = new Date(iso);
+    return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+  }
+  function datumKort(s) { var d = new Date(s + 'T12:00:00'); return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }); }
+  function datumLang(s) { var d = new Date(s + 'T12:00:00'); return d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }); }
+  function segmentNaam(s) {
+    if (s === 'alle') { return 'Alle bezoekers'; }
+    var p = s.split('|');
+    var dev = p[0] === 'm' ? 'Mobiel' : p[0] === 'd' ? 'Desktop' : p[0];
+    var cat = { terreinwagen: 'SUV/terreinwagen', stationcar: 'stationcar', hatchback: 'hatchback', sedan: 'sedan', mpv: 'MPV', cabriolet: 'cabrio', sportwagen: 'sportwagen', bedrijfswagen: 'bedrijfswagen' }[p[1]] || p[1] || '';
+    return dev + (cat ? ', ' + cat : '');
+  }
+  function modelNaam(k) {
+    var p = String(k || '').split('|');
+    var hoofd = ['bmw', 'byd', 'mg', 'ds', 'vw', 'kia', 'gwm', 'xev'];
+    var merk = hoofd.indexOf(p[0]) !== -1 ? p[0].toUpperCase() : p[0].replace(/(^|[\s-])\w/g, function (m) { return m.toUpperCase(); });
+    var model = (p[1] || '').split(' ').map(function (w) { return /\d/.test(w) || w.length <= 3 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+    return (merk + ' ' + model).trim();
+  }
+  function normaal() { var u = 0, v = 0; while (u === 0) { u = Math.random(); } while (v === 0) { v = Math.random(); } return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function gamma(k) {
+    if (k < 1) { return gamma(k + 1) * Math.pow(Math.random(), 1 / k); }
+    var d = k - 1 / 3, c = 1 / Math.sqrt(9 * d);
+    for (;;) { var x, v; do { x = normaal(); v = 1 + c * x; } while (v <= 0); v = v * v * v; var u = Math.random(); if (u < 1 - 0.0331 * x * x * x * x) { return d * v; } if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) { return d * v; } }
+  }
+  function betaTrek(a, b) { var x = gamma(a), y = gamma(b); return x / (x + y); }
+})();
+</script>
+
+</body>
+</html>
